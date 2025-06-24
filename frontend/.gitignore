@@ -1,0 +1,29 @@
+# Visual Studio build files
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Backup & cache
+*.bak
+*.cache
+*.log
+
+# VS Code
+.vscode/
+
+# Build results
+*.dll
+*.exe
+*.pdb
+
+# NuGet packages
+packages/
+*.nupkg
+
+# Others
+*.DS_Store
