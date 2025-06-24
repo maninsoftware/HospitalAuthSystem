@@ -1,0 +1,20 @@
+# Root .gitignore
+*.pyc
+__pycache__/
+.env
+*.db
+*.pkl
+*.json
+venv/
+.env/
+*.log
+.DS_Store
+
+# Visual Studio ignore
+.vscode/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pdb
