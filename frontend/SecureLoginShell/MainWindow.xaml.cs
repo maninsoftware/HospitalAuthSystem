@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace HospitalLoginApp
 {
@@ -16,14 +17,74 @@ namespace HospitalLoginApp
         public MainWindow()
         {
             InitializeComponent();
-            //this.Topmost = true;
-            //this.WindowState = WindowState.Maximized;
-            //this.WindowStyle = WindowStyle.None;
-            //this.AllowsTransparency = true;
-            //this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0));
+            //RegisterAppAtStartup(); // Register app to auto-start at login
             txtPassword.Password = "Password";
             txtPassword.Tag = "placeholder";
             txtPassword.Foreground = new SolidColorBrush(Colors.Gray);
+        }
+
+        /// <summary>
+        /// Registers the application to auto-launch on user logon via registry.
+        /// </summary>
+        private void RegisterAppAtStartup()
+        {
+            try
+            {
+                string appName = "HospitalLoginApp";
+                string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+                // Open the Run key safely and check for null
+                RegistryKey? runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+                if (runKey != null)
+                {
+                    using (runKey)
+                    {
+                        runKey.SetValue(appName, $"\"{appPath}\"");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("⚠️ Failed to access registry path: Run key is missing.", "Startup Registration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"⚠️ Failed to register app at startup.\n\n{ex.Message}", "Startup Registration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+
+        /// <summary>
+        /// Removes the application from startup registry key.
+        /// Call this manually during uninstall or optional logout.
+        /// </summary>
+        private void UnregisterAppFromStartup()
+        {
+            try
+            {
+                string appName = "HospitalLoginApp";
+
+                // Open the Run key safely and check for null
+                RegistryKey? runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+                if (runKey != null)
+                {
+                    using (runKey)
+                    {
+                        if (runKey.GetValue(appName) != null)
+                        {
+                            runKey.DeleteValue(appName);
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("⚠️ Failed to access registry path: Run key is missing.", "Unregister Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"⚠️ Failed to unregister app from startup.\n\n{ex.Message}", "Unregister Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private async void BtnLogin_Click(object sender, RoutedEventArgs e)
@@ -116,7 +177,6 @@ namespace HospitalLoginApp
                 lblStatus.Text = $"✅ {responseMessage}";
                 await Task.Delay(2000);
                 BtnCredentialMode_Click(this, new RoutedEventArgs());
-                
             }
             else
             {
@@ -196,6 +256,8 @@ namespace HospitalLoginApp
         protected override void OnClosed(EventArgs e)
         {
             webcamHelper?.Dispose();
+            // Optional: uncomment if you want to remove startup on exit
+            // UnregisterAppFromStartup();
             base.OnClosed(e);
         }
     }
