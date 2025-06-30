@@ -9,7 +9,7 @@ namespace HospitalLoginApp.Services
     public static class ApiService
     {
         private static readonly HttpClient httpClient = new HttpClient();
-        private const string baseUrl = "http://192.168.56.1:8000";
+        private const string baseUrl = "http://127.0.0.1:8000";
 
         public static async Task<bool> VerifyCredentials(string username, string password)
         {
@@ -33,7 +33,7 @@ namespace HospitalLoginApp.Services
             imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
             content.Add(imageContent, "file", "face.jpg");
 
-            var response = await httpClient.PostAsync("http://192.168.56.1:8000/verify/", content);
+            var response = await httpClient.PostAsync($"{baseUrl}/verify/", content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -70,7 +70,7 @@ namespace HospitalLoginApp.Services
             imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
             content.Add(imageContent, "file", "face.jpg");
 
-            var response = await httpClient.PostAsync("http://192.168.56.1:8000/register/", content);
+            var response = await httpClient.PostAsync("http://127.0.0.1:8000/register/", content);
             if (response.IsSuccessStatusCode)
             {
                 return "✅ Registration successful!";
@@ -81,5 +81,6 @@ namespace HospitalLoginApp.Services
                 return $"❌ Registration failed: {err}";
             }
         }
+
     }
 }
