@@ -1,15 +1,13 @@
 ﻿using OpenCvSharp;
-using OpenCvSharp.Extensions;
 using OpenCvSharp.WpfExtensions;
 using System;
 using System.Threading;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace HospitalLoginApp
 {
-    public class WebcamHelper
+    public class WebcamHelper : IDisposable
     {
         private readonly Image _imageControl;
         private readonly Dispatcher _dispatcher;
@@ -17,6 +15,7 @@ namespace HospitalLoginApp
         private Thread? _previewThread;
         private volatile bool _isPreviewing = false;
         private Mat? _latestFrame;
+        private bool _disposed = false;
 
         public WebcamHelper(Image imageControl, Dispatcher dispatcher)
         {
@@ -24,67 +23,69 @@ namespace HospitalLoginApp
             _dispatcher = dispatcher;
         }
 
-        // Start live preview
         public void StartPreview()
         {
-            if (_isPreviewing) return;
+            if (_isPreviewing || _disposed) return;
 
-            _capture = new VideoCapture(0, VideoCaptureAPIs.DSHOW);
-            if (!_capture.IsOpened())
+            try
             {
-                _capture.Release();
-                _capture = new VideoCapture(0, VideoCaptureAPIs.MSMF);
-            }
-
-            if (!_capture.IsOpened())
-            {
-                Console.WriteLine("❌ Webcam not found or can't be opened.");
-                return;
-            }
-
-            _isPreviewing = true;
-            _previewThread = new Thread(() =>
-            {
-                try
+                _capture = new VideoCapture(0, VideoCaptureAPIs.DSHOW);
+                if (!_capture.IsOpened())
                 {
-                    _latestFrame = new Mat();
-                    while (_isPreviewing)
+                    _capture.Release();
+                    _capture = new VideoCapture(0, VideoCaptureAPIs.MSMF);
+                }
+
+                if (!_capture.IsOpened())
+                {
+                    Console.WriteLine("❌ Webcam not available.");
+                    return;
+                }
+
+                _isPreviewing = true;
+                _latestFrame = new Mat();
+
+                _previewThread = new Thread(() =>
+                {
+                    try
                     {
-                        _capture.Read(_latestFrame);
-                        if (_latestFrame.Empty())
+                        while (_isPreviewing)
                         {
-                            Console.WriteLine("⚠️ Frame is empty.");
-                            continue;
+                            _capture.Read(_latestFrame);
+                            if (_latestFrame.Empty()) continue;
+
+                            var bitmap = _latestFrame.ToBitmapSource();
+                            bitmap.Freeze();
+
+                            _dispatcher.Invoke(() =>
+                            {
+                                _imageControl.Source = bitmap;
+                            });
+
+                            Thread.Sleep(33);
                         }
-
-                        var bitmap = _latestFrame.ToBitmapSource();
-                        bitmap.Freeze();
-
-                        _dispatcher.Invoke(() =>
-                        {
-                            _imageControl.Source = bitmap;
-                        });
-
-                        Thread.Sleep(30); // ~30 FPS
                     }
-                }
-                catch (Exception ex)
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("[Preview Error] " + ex.Message);
+                    }
+                })
                 {
-                    Console.WriteLine($"[Webcam Error] {ex.Message}");
-                }
-            })
+                    IsBackground = true
+                };
+                _previewThread.Start();
+            }
+            catch (Exception ex)
             {
-                IsBackground = true
-            };
-            _previewThread.Start();
+                Console.WriteLine("[StartPreview Error] " + ex.Message);
+            }
         }
 
-        // Capture current frame from preview
         public byte[]? CaptureImage()
         {
-            if (_latestFrame == null || _latestFrame.Empty())
+            if (_disposed || _latestFrame == null || _latestFrame.Empty())
             {
-                Console.WriteLine("❌ No frame available to capture.");
+                Console.WriteLine("❌ No frame to capture.");
                 return null;
             }
 
@@ -92,19 +93,41 @@ namespace HospitalLoginApp
             return matClone.ImEncode(".jpg");
         }
 
-        // Stop preview cleanly
         public void StopPreview()
         {
-            _isPreviewing = false;
-            _previewThread?.Join();
-            _capture?.Release();
-            _capture?.Dispose();
-            _latestFrame?.Dispose();
+            if (_disposed) return;
 
-            _dispatcher.Invoke(() =>
+            _isPreviewing = false;
+
+            try
             {
-                _imageControl.Source = null;
-            });
+                _previewThread?.Join();
+                _previewThread = null;
+
+                _capture?.Release();
+                _capture?.Dispose();
+                _capture = null;
+
+                _latestFrame?.Dispose();
+                _latestFrame = null;
+
+                _dispatcher.Invoke(() =>
+                {
+                    _imageControl.Source = null;
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ERROR] Stopping webcam: " + ex.Message);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+
+            StopPreview();
+            _disposed = true;
         }
     }
 }

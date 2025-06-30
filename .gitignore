@@ -18,3 +18,10 @@ obj/
 *.suo
 *.cache
 *.pdb
+*.exe
+*.dll
+
+# System
+.DS_Store
+.env
+.vscode/
