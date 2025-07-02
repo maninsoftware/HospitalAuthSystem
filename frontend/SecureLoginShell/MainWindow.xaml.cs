@@ -5,7 +5,12 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
+using Microsoft.Win32;
+using System.IO;
+using Microsoft.Win32.TaskScheduler;
+using System.Security.Principal;
+using TPL = System.Threading.Tasks;
 
 namespace HospitalLoginApp
 {
@@ -16,14 +21,91 @@ namespace HospitalLoginApp
         public MainWindow()
         {
             InitializeComponent();
-            //this.Topmost = true;
-            //this.WindowState = WindowState.Maximized;
-            //this.WindowStyle = WindowStyle.None;
-            //this.AllowsTransparency = true;
-            //this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0));
+            //RegisterTaskInTaskScheduler(); // Register app to auto-start at login
+            //UnregisterTaskFromTaskScheduler();
             txtPassword.Password = "Password";
             txtPassword.Tag = "placeholder";
             txtPassword.Foreground = new SolidColorBrush(Colors.Gray);
+        }
+
+        private void RegisterTaskInTaskScheduler()
+        {
+            try
+            {
+                string appName = "HospitalLoginApp";
+                string appPath = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(appPath) || !File.Exists(appPath))
+                {
+                    MessageBox.Show("❌ Failed to locate application executable path.");
+                    return;
+                }
+
+                using (TaskService ts = new TaskService())
+                {
+                    // Delete existing task if present
+                    Microsoft.Win32.TaskScheduler.Task existing = ts.GetTask(appName);
+                    if (existing != null)
+                        ts.RootFolder.DeleteTask(appName);
+
+                    // Create trigger: at logon
+                    LogonTrigger trigger = new LogonTrigger
+                    {
+                        UserId = WindowsIdentity.GetCurrent().Name,
+                        Delay = TimeSpan.FromSeconds(0)
+                    };
+
+                    // Create action: run this executable
+                    ExecAction action = new ExecAction(appPath, null, Path.GetDirectoryName(appPath));
+
+                    // Create the task definition
+                    TaskDefinition td = ts.NewTask();
+                    td.RegistrationInfo.Description = "Auto-launch HospitalLoginApp at user logon";
+                    td.Principal.RunLevel = TaskRunLevel.Highest;
+                    td.Principal.LogonType = TaskLogonType.InteractiveToken;
+                    td.Triggers.Add(trigger);
+                    td.Actions.Add(action);
+                    td.Settings.DisallowStartIfOnBatteries = false;
+                    td.Settings.StopIfGoingOnBatteries = false;
+                    td.Settings.StartWhenAvailable = true;
+                    td.Settings.ExecutionTimeLimit = TimeSpan.FromMinutes(5);
+                    td.Settings.Priority = ProcessPriorityClass.High;
+
+                    // Register the task
+                    ts.RootFolder.RegisterTaskDefinition(appName, td);
+                }
+
+                //MessageBox.Show("✅ Task registered in Task Scheduler successfully.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Failed to register task.\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void UnregisterTaskFromTaskScheduler()
+        {
+            try
+            {
+                string appName = "HospitalLoginApp";
+                using (TaskService ts = new TaskService())
+                {
+                    Microsoft.Win32.TaskScheduler.Task existing = ts.GetTask(appName);
+                    if (existing != null)
+                    {
+                        ts.RootFolder.DeleteTask(appName);
+                        MessageBox.Show("🧹 Task unregistered successfully.");
+                    }
+                    else
+                    {
+                        MessageBox.Show("ℹ️ No task found to remove.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Failed to unregister task.\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void BtnLogin_Click(object sender, RoutedEventArgs e)
@@ -42,7 +124,7 @@ namespace HospitalLoginApp
             if (result)
             {
                 lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
-                await Task.Delay(2000);
+                await TPL.Task.Delay(2000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
                 Application.Current.Shutdown();
             }
@@ -76,7 +158,7 @@ namespace HospitalLoginApp
             {
                 lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
                 webcamHelper.StopPreview();
-                await Task.Delay(2000);
+                await TPL.Task.Delay(2000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
                 Application.Current.Shutdown();
             }
@@ -114,9 +196,8 @@ namespace HospitalLoginApp
             if (!string.IsNullOrEmpty(responseMessage))
             {
                 lblStatus.Text = $"✅ {responseMessage}";
-                await Task.Delay(2000);
+                await TPL.Task.Delay(2000);
                 BtnCredentialMode_Click(this, new RoutedEventArgs());
-                
             }
             else
             {
@@ -196,6 +277,8 @@ namespace HospitalLoginApp
         protected override void OnClosed(EventArgs e)
         {
             webcamHelper?.Dispose();
+            // Optional: uncomment if you want to remove startup on exit
+            // UnregisterAppFromStartup();
             base.OnClosed(e);
         }
     }
