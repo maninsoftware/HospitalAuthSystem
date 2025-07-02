@@ -5,8 +5,12 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 using Microsoft.Win32;
+using System.IO;
+using Microsoft.Win32.TaskScheduler;
+using System.Security.Principal;
+using TPL = System.Threading.Tasks;
 
 namespace HospitalLoginApp
 {
@@ -17,73 +21,90 @@ namespace HospitalLoginApp
         public MainWindow()
         {
             InitializeComponent();
-            //RegisterAppAtStartup(); // Register app to auto-start at login
+            //RegisterTaskInTaskScheduler(); // Register app to auto-start at login
+            //UnregisterTaskFromTaskScheduler();
             txtPassword.Password = "Password";
             txtPassword.Tag = "placeholder";
             txtPassword.Foreground = new SolidColorBrush(Colors.Gray);
         }
 
-        /// <summary>
-        /// Registers the application to auto-launch on user logon via registry.
-        /// </summary>
-        private void RegisterAppAtStartup()
+        private void RegisterTaskInTaskScheduler()
         {
             try
             {
                 string appName = "HospitalLoginApp";
-                string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string appPath = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
 
-                // Open the Run key safely and check for null
-                RegistryKey? runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-                if (runKey != null)
+                if (string.IsNullOrWhiteSpace(appPath) || !File.Exists(appPath))
                 {
-                    using (runKey)
+                    MessageBox.Show("❌ Failed to locate application executable path.");
+                    return;
+                }
+
+                using (TaskService ts = new TaskService())
+                {
+                    // Delete existing task if present
+                    Microsoft.Win32.TaskScheduler.Task existing = ts.GetTask(appName);
+                    if (existing != null)
+                        ts.RootFolder.DeleteTask(appName);
+
+                    // Create trigger: at logon
+                    LogonTrigger trigger = new LogonTrigger
                     {
-                        runKey.SetValue(appName, $"\"{appPath}\"");
-                    }
+                        UserId = WindowsIdentity.GetCurrent().Name,
+                        Delay = TimeSpan.FromSeconds(0)
+                    };
+
+                    // Create action: run this executable
+                    ExecAction action = new ExecAction(appPath, null, Path.GetDirectoryName(appPath));
+
+                    // Create the task definition
+                    TaskDefinition td = ts.NewTask();
+                    td.RegistrationInfo.Description = "Auto-launch HospitalLoginApp at user logon";
+                    td.Principal.RunLevel = TaskRunLevel.Highest;
+                    td.Principal.LogonType = TaskLogonType.InteractiveToken;
+                    td.Triggers.Add(trigger);
+                    td.Actions.Add(action);
+                    td.Settings.DisallowStartIfOnBatteries = false;
+                    td.Settings.StopIfGoingOnBatteries = false;
+                    td.Settings.StartWhenAvailable = true;
+                    td.Settings.ExecutionTimeLimit = TimeSpan.FromMinutes(5);
+                    td.Settings.Priority = ProcessPriorityClass.High;
+
+                    // Register the task
+                    ts.RootFolder.RegisterTaskDefinition(appName, td);
                 }
-                else
-                {
-                    MessageBox.Show("⚠️ Failed to access registry path: Run key is missing.", "Startup Registration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+
+                //MessageBox.Show("✅ Task registered in Task Scheduler successfully.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"⚠️ Failed to register app at startup.\n\n{ex.Message}", "Startup Registration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"❌ Failed to register task.\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-
-        /// <summary>
-        /// Removes the application from startup registry key.
-        /// Call this manually during uninstall or optional logout.
-        /// </summary>
-        private void UnregisterAppFromStartup()
+        private void UnregisterTaskFromTaskScheduler()
         {
             try
             {
                 string appName = "HospitalLoginApp";
-
-                // Open the Run key safely and check for null
-                RegistryKey? runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-                if (runKey != null)
+                using (TaskService ts = new TaskService())
                 {
-                    using (runKey)
+                    Microsoft.Win32.TaskScheduler.Task existing = ts.GetTask(appName);
+                    if (existing != null)
                     {
-                        if (runKey.GetValue(appName) != null)
-                        {
-                            runKey.DeleteValue(appName);
-                        }
+                        ts.RootFolder.DeleteTask(appName);
+                        MessageBox.Show("🧹 Task unregistered successfully.");
                     }
-                }
-                else
-                {
-                    MessageBox.Show("⚠️ Failed to access registry path: Run key is missing.", "Unregister Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    else
+                    {
+                        MessageBox.Show("ℹ️ No task found to remove.");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"⚠️ Failed to unregister app from startup.\n\n{ex.Message}", "Unregister Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"❌ Failed to unregister task.\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -103,7 +124,7 @@ namespace HospitalLoginApp
             if (result)
             {
                 lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
-                await Task.Delay(2000);
+                await TPL.Task.Delay(2000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
                 Application.Current.Shutdown();
             }
@@ -137,7 +158,7 @@ namespace HospitalLoginApp
             {
                 lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
                 webcamHelper.StopPreview();
-                await Task.Delay(2000);
+                await TPL.Task.Delay(2000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
                 Application.Current.Shutdown();
             }
@@ -175,7 +196,7 @@ namespace HospitalLoginApp
             if (!string.IsNullOrEmpty(responseMessage))
             {
                 lblStatus.Text = $"✅ {responseMessage}";
-                await Task.Delay(2000);
+                await TPL.Task.Delay(2000);
                 BtnCredentialMode_Click(this, new RoutedEventArgs());
             }
             else
