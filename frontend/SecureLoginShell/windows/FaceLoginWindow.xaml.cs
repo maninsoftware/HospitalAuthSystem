@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using HospitalLoginApp.Helpers;
 using HospitalLoginApp.Services;
-using System.Drawing;
-using System.Security.Principal;
 using TPL = System.Threading.Tasks;
 
 namespace HospitalLoginApp.Windows
@@ -12,7 +11,7 @@ namespace HospitalLoginApp.Windows
     public partial class FaceLoginWindow : Window
     {
         private WebcamHelper webcamHelper;
-        
+
         public FaceLoginWindow()
         {
             InitializeComponent();
@@ -26,6 +25,20 @@ namespace HospitalLoginApp.Windows
             if (webcamHelper == null)
             {
                 lblStatus.Text = "❌ Webcam not initialized.";
+                return;
+            }
+
+            lblStatus.Text = "👀 Please blink within 5 seconds...";
+            webcamHelper.ResetLiveness();
+            webcamHelper.ActivateLivenessCheck();
+
+            await TPL.Task.Delay(5000); // Wait for user to blink
+            await TPL.Task.Delay(300);  // Slight buffer
+
+            bool isLive = webcamHelper.IsFaceLive();
+            if (!isLive)
+            {
+                lblStatus.Text = "❌ Face not live or capture failed.";
                 return;
             }
 
@@ -56,16 +69,17 @@ namespace HospitalLoginApp.Windows
             }
         }
 
+        private void BtnBack_Click(object sender, RoutedEventArgs e)
+        {
+            webcamHelper?.StopPreview();
+            webcamHelper?.Dispose();
+            this.Close();
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             webcamHelper?.Dispose();
             base.OnClosed(e);
-        }
-        private void BtnBack_Click(object sender, RoutedEventArgs e)
-        {
-            webcamHelper?.StopPreview();   // Stop the camera preview
-            webcamHelper?.Dispose();
-            this.Close(); // Simply close this popup and return to main window
         }
     }
 }
