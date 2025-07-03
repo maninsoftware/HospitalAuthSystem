@@ -3,69 +3,44 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Hospital PC Login"
         Height="700" Width="900"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
         WindowStartupLocation="CenterScreen">
 
-    <Grid Background="Transparent">
+    <Grid>
         <!-- Main Login Card -->
         <Border Background="White"
                 CornerRadius="15"
-                Width="700"
-                Height="600"
-                Padding="20"
+                Width="300"
+                Height="200"
+                Padding="10"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Effect="{DynamicResource DropShadow}">
+                BorderBrush="#DDD"
+                BorderThickness="1">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="➡️"
+           FontSize="22"
+           FontWeight="Bold"
+           Foreground="#333"
+           HorizontalAlignment="Center"
+           Margin="0,0,0,10"/>
+                <TextBlock Text="Welcome !"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="#333"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,10"/>
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                <!-- Horizontal button group -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="🔐" FontSize="18" Width="55" Height="50" Click="BtnCredentialLogin_Click"  Margin="10"/>
+                    <Button Content="👤" FontSize="18" Width="55" Height="50" Click="BtnFaceLogin_Click" Margin=" 10"/>
+                    <Button Content="➕" FontSize="18" Width="55" Height="50" Click="BtnRegister_Click" Margin=" 10"/>
 
-                <!-- Top Buttons -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,20">
-                    <Button Content="Credential Login" Width="150" Margin="5" Click="BtnCredentialMode_Click"/>
-                    <Button Content="Face Login" Width="150" Margin="5" Click="BtnFaceMode_Click"/>
-                    <Button Content="Register" Width="150" Margin="5" Click="BtnRegisterMode_Click"/>
                 </StackPanel>
-
-                <!-- Credential Login Panel -->
-                <Grid Grid.Row="1" Name="CredentialPanel" Visibility="Visible">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="300">
-                        <TextBox Name="txtUsername" Margin="5" Text="Username" GotFocus="ClearText" LostFocus="RestoreText"/>
-                        <PasswordBox Name="txtPassword" Margin="5"/>
-                        <Button Content="Login" Click="BtnLogin_Click" Margin="5"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Face Login Panel -->
-                <Grid Grid.Row="1" Name="FacePanel" Visibility="Collapsed">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Image Name="imgWebcam" Width="400" Height="300" Margin="5"/>
-                        <Button Content="Verify Face" Click="BtnFaceVerify_Click" Margin="5"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Register Panel -->
-                <Grid Grid.Row="1" Name="RegisterPanel" Visibility="Collapsed">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="350">
-                        <StackPanel Margin="5">
-                            <TextBlock Text="Username" Margin="0,0,0,5"/>
-                            <TextBox Name="regUsername"/>
-                        </StackPanel>
-                        <StackPanel Margin="5">
-                            <TextBlock Text="Password" Margin="0,0,0,5"/>
-                            <PasswordBox Name="regPassword" />
-                        </StackPanel>
-                        <Image Name="regWebcam" Width="400" Height="300" Margin="5"/>
-                        <Button Content="Register" Click="BtnRegister_Click" Margin="5"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Status Message -->
-                <TextBlock Name="lblStatus" Grid.Row="2" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10"/>
-            </Grid>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

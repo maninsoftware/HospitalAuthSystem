@@ -19,14 +19,11 @@ namespace HospitalLoginApp
 {
     public partial class MainWindow : Window
     {
-        private WebcamHelper? webcamHelper;
-
         public MainWindow()
         {
             InitializeComponent();
-            txtPassword.Password = "Password";
-            txtPassword.Tag = "placeholder";
-            txtPassword.Foreground = new SolidColorBrush(Colors.Gray);
+            //RegisterTaskInTaskScheduler(); 
+            //UnregisterTaskFromTaskScheduler();
         }
 
         private void RegisterTaskInTaskScheduler()
@@ -102,40 +99,18 @@ namespace HospitalLoginApp
             }
         }
 
-        private async void BtnLogin_Click(object sender, RoutedEventArgs e)
+        private void BtnCredentialLogin_Click(object sender, RoutedEventArgs e)
         {
-            string username = txtUsername.Text.Trim();
-            string password = txtPassword.Password;
-
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            var loginWindow = new CredentialLoginWindow
             {
-                lblStatus.Text = "Please enter credentials.";
-                return;
-            }
+                Owner = this
+            };
 
-            lblStatus.Text = "Verifying credentials...";
-            bool result = await ApiService.VerifyCredentials(username, password);
-            if (result)
-            {
-                lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
-                await TPL.Task.Delay(2000);
-                ShellHelper.LaunchWindowsShellIfNeeded();
-                Application.Current.Shutdown();
-            }
-            else
-            {
-                lblStatus.Text = "❌ Login Failed!";
-            }
-        }
+            this.Hide(); // Hide main window before showing popup
 
-        private async void BtnFaceVerify_Click(object sender, RoutedEventArgs e)
-        {
-            if (webcamHelper == null)
-            {
-                lblStatus.Text = "❌ Webcam not initialized.";
-                return;
-            }
+            loginWindow.ShowDialog(); // Show modal
 
+            this.Show(); // Show main window again when popup closes
             lblStatus.Text = "👀 Please blink within 5 seconds...";
             webcamHelper.ResetLiveness();
             webcamHelper.ActivateLivenessCheck();
@@ -181,21 +156,9 @@ namespace HospitalLoginApp
             }
         }
 
-        private async void BtnRegister_Click(object sender, RoutedEventArgs e)
-        {
-            string username = regUsername.Text.Trim();
-            string password = regPassword.Password;
 
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-            {
-                lblStatus.Text = "Please enter username and password.";
-                return;
-            }
 
-            lblStatus.Text = "📸 Capturing registration photo...";
-            webcamHelper ??= new WebcamHelper(regWebcam, Dispatcher);
-            byte[]? imageBytes = webcamHelper.CaptureImage();
-
+        private void BtnFaceLogin_Click(object sender, RoutedEventArgs e)
             if (imageBytes == null)
             {
                 lblStatus.Text = "❌ Face not live or capture failed.";
@@ -246,46 +209,30 @@ namespace HospitalLoginApp
 
         private void BtnRegisterMode_Click(object sender, RoutedEventArgs e)
         {
-            CredentialPanel.Visibility = Visibility.Collapsed;
-            FacePanel.Visibility = Visibility.Collapsed;
-            RegisterPanel.Visibility = Visibility.Visible;
-
-            EnsureWebcamInitialized(regWebcam);
-            lblStatus.Text = "📷 Prepare for registration photo.";
-        }
-
-        private void ClearText(object sender, RoutedEventArgs e)
-        {
-            if (sender is TextBox tb && tb.Text == "Username")
-                tb.Text = "";
-        }
-
-        private void RestoreText(object sender, RoutedEventArgs e)
-        {
-            if (sender is TextBox tb && string.IsNullOrWhiteSpace(tb.Text))
-                tb.Text = "Username";
-        }
-
-        private void ClearPassword(object sender, RoutedEventArgs e)
-        {
-            if (sender is PasswordBox pb && pb.Tag?.ToString() == "placeholder")
+            var loginWindow = new FaceLoginWindow
             {
-                pb.Clear();
-                pb.Tag = null;
-                pb.Foreground = new SolidColorBrush(Colors.Black);
-            }
+                Owner = this
+            };
+
+            this.Hide(); // Hide main window before showing popup
+
+            loginWindow.ShowDialog(); // Show modal
+
+            this.Show(); // Show main window again when popup closes
         }
 
-        private void RestorePassword(object sender, RoutedEventArgs e)
+        private void BtnRegister_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is PasswordBox pb && string.IsNullOrWhiteSpace(pb.Password))
+            var loginWindow = new RegisterWindow
             {
-                pb.Password = "Password";
-                pb.Tag = "placeholder";
-                pb.Foreground = new SolidColorBrush(Colors.Gray);
-            }
-        }
+                Owner = this
+            };
 
+            this.Hide(); // Hide main window before showing popup
+
+            loginWindow.ShowDialog(); // Show modal
+
+            this.Show(); // Show main window again when popup closes
         protected override void OnClosed(EventArgs e)
         {
             webcamHelper?.Dispose();
