@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Media;
 using HospitalLoginApp.Helpers;
 using HospitalLoginApp.Services;
+using System.Security.Principal;
+using TPL = System.Threading.Tasks;
 
 namespace HospitalLoginApp.Windows
 {
@@ -113,7 +115,10 @@ namespace HospitalLoginApp.Windows
         }
         private void BtnBack_Click(object sender, RoutedEventArgs e)
         {
+            webcamHelper?.StopPreview();   // Stop the camera preview
+            webcamHelper?.Dispose();
             this.Close(); // Simply close this popup and return to main window
         }
+      
     }
 }

@@ -1,9 +1,18 @@
-﻿using System;
-using System.Windows;
-using System.Threading.Tasks;
-using HospitalLoginApp.Services;
-using System.Windows.Media;
+﻿using HospitalLoginApp.Services;
 using HospitalLoginApp.Helpers;
+using System;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Threading.Tasks;
+using Microsoft.Win32;
+using System.IO;
+using Microsoft.Win32.TaskScheduler;
+using System.Security.Principal;
+using TPL = System.Threading.Tasks;
+
+
 namespace HospitalLoginApp.Windows
 {
     public partial class CredentialLoginWindow : Window
@@ -60,24 +69,22 @@ namespace HospitalLoginApp.Windows
 
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
-                lblStatus.Text = "⚠️ Please enter both username and password.";
+                lblStatus.Text = "Please enter credentials.";
                 return;
             }
 
-            lblStatus.Text = "🔐 Verifying...";
-            bool isValid = await ApiService.VerifyCredentials(username, password);
-
-            if (isValid)
+            lblStatus.Text = "Verifying credentials...";
+            bool result = await ApiService.VerifyCredentials(username, password);
+            if (result)
             {
-                lblStatus.Text = $"✅ Welcome, {username}!";
-                await Task.Delay(1500);
-
+                lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
+                await TPL.Task.Delay(2000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
-                Application.Current.Shutdown(); // Ends the entire app
+                Application.Current.Shutdown();
             }
             else
             {
-                lblStatus.Text = "❌ Invalid credentials.";
+                lblStatus.Text = "❌ Login Failed!";
             }
         }
     }

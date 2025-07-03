@@ -3,13 +3,16 @@ using System.Threading.Tasks;
 using System.Windows;
 using HospitalLoginApp.Helpers;
 using HospitalLoginApp.Services;
+using System.Drawing;
+using System.Security.Principal;
+using TPL = System.Threading.Tasks;
 
 namespace HospitalLoginApp.Windows
 {
     public partial class FaceLoginWindow : Window
     {
         private WebcamHelper webcamHelper;
-
+        
         public FaceLoginWindow()
         {
             InitializeComponent();
@@ -20,6 +23,12 @@ namespace HospitalLoginApp.Windows
 
         private async void BtnFaceVerify_Click(object sender, RoutedEventArgs e)
         {
+            if (webcamHelper == null)
+            {
+                lblStatus.Text = "❌ Webcam not initialized.";
+                return;
+            }
+
             lblStatus.Text = "📸 Capturing image...";
             byte[]? imageBytes = webcamHelper.CaptureImage();
 
@@ -34,10 +43,9 @@ namespace HospitalLoginApp.Windows
 
             if (!string.IsNullOrEmpty(username))
             {
-                lblStatus.Text = $"✅ Welcome, {username}!";
+                lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
                 webcamHelper.StopPreview();
-                await Task.Delay(2000);
-
+                await TPL.Task.Delay(2000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
                 Application.Current.Shutdown();
             }
@@ -55,6 +63,8 @@ namespace HospitalLoginApp.Windows
         }
         private void BtnBack_Click(object sender, RoutedEventArgs e)
         {
+            webcamHelper?.StopPreview();   // Stop the camera preview
+            webcamHelper?.Dispose();
             this.Close(); // Simply close this popup and return to main window
         }
     }

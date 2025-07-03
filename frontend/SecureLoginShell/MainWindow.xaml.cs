@@ -93,39 +93,45 @@ namespace HospitalLoginApp
 
         private void BtnCredentialLogin_Click(object sender, RoutedEventArgs e)
         {
-            var loginWindow = new CredentialLoginWindow();
-            loginWindow.Owner = this;
-            loginWindow.ShowDialog();
-            _ = new CredentialLoginWindow();
-            loginWindow.Owner = this; // Set owner
-            this.Hide();              // Hide main window
-            loginWindow.ShowDialog(); // Block until closed
-            this.Show();
+            var loginWindow = new CredentialLoginWindow
+            {
+                Owner = this
+            };
+
+            this.Hide(); // Hide main window before showing popup
+
+            loginWindow.ShowDialog(); // Show modal
+
+            this.Show(); // Show main window again when popup closes
         }
 
 
         private void BtnFaceLogin_Click(object sender, RoutedEventArgs e)
         {
-            var faceWindow = new FaceLoginWindow();
-            faceWindow.Owner = this;
-            faceWindow.ShowDialog();
-            _ = new FaceLoginWindow();
-            faceWindow.Owner = this; // Set owner
-            this.Hide();              // Hide main window
-            faceWindow.ShowDialog(); // Block until closed
-            this.Show();
+            var loginWindow = new FaceLoginWindow
+            {
+                Owner = this
+            };
+
+            this.Hide(); // Hide main window before showing popup
+
+            loginWindow.ShowDialog(); // Show modal
+
+            this.Show(); // Show main window again when popup closes
         }
 
         private void BtnRegister_Click(object sender, RoutedEventArgs e)
         {
-            var regWindow = new RegisterWindow();
-            regWindow.Owner = this;
-            regWindow.ShowDialog();
-            _ = new RegisterWindow();
-            regWindow.Owner = this; // Set owner
-            this.Hide();              // Hide main window
-            regWindow.ShowDialog(); // Block until closed
-            this.Show();
+            var loginWindow = new RegisterWindow
+            {
+                Owner = this
+            };
+
+            this.Hide(); // Hide main window before showing popup
+
+            loginWindow.ShowDialog(); // Show modal
+
+            this.Show(); // Show main window again when popup closes
         }
     }
 }
