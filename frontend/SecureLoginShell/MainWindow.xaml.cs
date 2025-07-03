@@ -1,16 +1,19 @@
-﻿using HospitalLoginApp.Services;
-using HospitalLoginApp.Helpers;
+﻿using HospitalLoginApp.Helpers;
+using HospitalLoginApp.Services;
+using Microsoft.Win32.TaskScheduler;
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Security.Principal;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-//using System.Threading.Tasks;
-using Microsoft.Win32;
-using System.IO;
-using Microsoft.Win32.TaskScheduler;
-using System.Security.Principal;
 using TPL = System.Threading.Tasks;
+using WpfImage = System.Windows.Controls.Image;
+using DrawingImage = System.Drawing.Image;
+using DrawingRectangle = System.Drawing.Rectangle;
+
 
 namespace HospitalLoginApp
 {
@@ -21,8 +24,6 @@ namespace HospitalLoginApp
         public MainWindow()
         {
             InitializeComponent();
-            //RegisterTaskInTaskScheduler(); // Register app to auto-start at login
-            //UnregisterTaskFromTaskScheduler();
             txtPassword.Password = "Password";
             txtPassword.Tag = "placeholder";
             txtPassword.Foreground = new SolidColorBrush(Colors.Gray);
@@ -43,22 +44,18 @@ namespace HospitalLoginApp
 
                 using (TaskService ts = new TaskService())
                 {
-                    // Delete existing task if present
-                    Microsoft.Win32.TaskScheduler.Task existing = ts.GetTask(appName);
+                    var existing = ts.GetTask(appName);
                     if (existing != null)
                         ts.RootFolder.DeleteTask(appName);
 
-                    // Create trigger: at logon
                     LogonTrigger trigger = new LogonTrigger
                     {
                         UserId = WindowsIdentity.GetCurrent().Name,
                         Delay = TimeSpan.FromSeconds(0)
                     };
 
-                    // Create action: run this executable
                     ExecAction action = new ExecAction(appPath, null, Path.GetDirectoryName(appPath));
 
-                    // Create the task definition
                     TaskDefinition td = ts.NewTask();
                     td.RegistrationInfo.Description = "Auto-launch HospitalLoginApp at user logon";
                     td.Principal.RunLevel = TaskRunLevel.Highest;
@@ -71,11 +68,8 @@ namespace HospitalLoginApp
                     td.Settings.ExecutionTimeLimit = TimeSpan.FromMinutes(5);
                     td.Settings.Priority = ProcessPriorityClass.High;
 
-                    // Register the task
                     ts.RootFolder.RegisterTaskDefinition(appName, td);
                 }
-
-                //MessageBox.Show("✅ Task registered in Task Scheduler successfully.");
             }
             catch (Exception ex)
             {
@@ -90,7 +84,7 @@ namespace HospitalLoginApp
                 string appName = "HospitalLoginApp";
                 using (TaskService ts = new TaskService())
                 {
-                    Microsoft.Win32.TaskScheduler.Task existing = ts.GetTask(appName);
+                    var existing = ts.GetTask(appName);
                     if (existing != null)
                     {
                         ts.RootFolder.DeleteTask(appName);
@@ -142,12 +136,29 @@ namespace HospitalLoginApp
                 return;
             }
 
+            lblStatus.Text = "👀 Please blink within 5 seconds...";
+            webcamHelper.ResetLiveness();
+            webcamHelper.ActivateLivenessCheck();
+
+            await TPL.Task.Delay(5000); // Wait for 5 seconds for the blink to be detected
+            await TPL.Task.Delay(300);
+
+            bool isLive = webcamHelper.IsFaceLive();
+
+            Debug.WriteLine($"[DEBUG] Final Liveness Check Result = {isLive}");
+
+            if (!isLive)
+            {
+                lblStatus.Text = "❌ Face not live or capture failed.";
+                return;
+            }
+
             lblStatus.Text = "📸 Capturing image...";
             byte[]? imageBytes = webcamHelper.CaptureImage();
 
             if (imageBytes == null)
             {
-                lblStatus.Text = "❌ Failed to capture image.";
+                lblStatus.Text = "❌ Face not live or capture failed.";
                 return;
             }
 
@@ -158,6 +169,7 @@ namespace HospitalLoginApp
             {
                 lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
                 webcamHelper.StopPreview();
+                webcamHelper.ResetLiveness();
                 await TPL.Task.Delay(2000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
                 Application.Current.Shutdown();
@@ -165,7 +177,7 @@ namespace HospitalLoginApp
             else
             {
                 lblStatus.Text = "❌ Face not recognized. Please try again.";
-                webcamHelper.StartPreview();
+                webcamHelper.ResetLiveness();
             }
         }
 
@@ -186,7 +198,7 @@ namespace HospitalLoginApp
 
             if (imageBytes == null)
             {
-                lblStatus.Text = "❌ Failed to capture image.";
+                lblStatus.Text = "❌ Face not live or capture failed.";
                 return;
             }
 
@@ -205,7 +217,7 @@ namespace HospitalLoginApp
             }
         }
 
-        private void EnsureWebcamInitialized(Image target)
+        private void EnsureWebcamInitialized(System.Windows.Controls.Image target)
         {
             webcamHelper?.Dispose();
             webcamHelper = new WebcamHelper(target, Dispatcher);
@@ -277,8 +289,6 @@ namespace HospitalLoginApp
         protected override void OnClosed(EventArgs e)
         {
             webcamHelper?.Dispose();
-            // Optional: uncomment if you want to remove startup on exit
-            // UnregisterAppFromStartup();
             base.OnClosed(e);
         }
     }
