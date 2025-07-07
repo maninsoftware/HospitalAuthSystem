@@ -1,19 +1,47 @@
 ﻿<Window x:Class="HospitalLoginApp.Windows.FaceLoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Credential Login"
-        Height="320"
-        Width="400"
+        Title="Face Login"
+        WindowState="Maximized"
         WindowStyle="None"
-        ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner"
         AllowsTransparency="True"
-        Background="White">
-    <Grid Background="White" >
-        <StackPanel Margin="20,10,20,10">
-            <Button Content="⬅️"  Width="48" Height="36" Click="BtnBack_Click" ToolTip="Back"  VerticalAlignment="Top" HorizontalAlignment="Left"/>
+        Background="#80000000" 
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    
+    <Grid Background="Transparent" >
+        <Border Background="White"
+            Width="400" Height="300"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            CornerRadius="10"
+            Padding="20"
+            BorderBrush="#CCC"
+            BorderThickness="1">
 
-            <TextBlock Text="Face Login" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button Width="42" Height="42"
+                 Background="White"
+                 BorderBrush="#CCC"
+                 FontFamily="Segoe MDL2 Assets"
+                 Content=""
+                 FontSize="20"
+                 Foreground="#333"
+                 Click="BtnBack_Click"
+                 ToolTip="Back"
+                 HorizontalAlignment="Left"
+                 VerticalAlignment="Top"
+                 Margin="10"/>
+
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <!-- ✅ Always-visible Back Button -->
+                
+                <TextBlock Text="Face Login" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Center"/>
 
                 <Image x:Name="imgWebcam" Height="150" Margin="0,0,0,10" />
 
@@ -23,6 +51,7 @@
             <TextBlock x:Name="lblStatus" Foreground="Red" FontWeight="SemiBold" Margin="0,10,0,0" TextWrapping="Wrap"/>
 
         </StackPanel>
-        
+            </Grid>
+        </Border>
     </Grid>
 </Window>

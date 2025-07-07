@@ -16,6 +16,11 @@ namespace HospitalLoginApp.Windows
         public RegisterWindow()
         {
             InitializeComponent();
+            this.Topmost = true;
+            this.WindowState = WindowState.Maximized;
+            this.WindowStyle = WindowStyle.None;
+            this.AllowsTransparency = true;
+            this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0)); // 50% black
 
             // Initialize webcam preview
             webcamHelper = new WebcamHelper(regWebcam, Dispatcher);

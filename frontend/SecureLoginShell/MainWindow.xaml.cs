@@ -5,6 +5,7 @@ using System.Security.Principal;
 using System.Windows;
 using HospitalLoginApp.Windows;
 using Microsoft.Win32.TaskScheduler;
+using System.Windows.Media;
 
 namespace HospitalLoginApp
 {
@@ -14,6 +15,11 @@ namespace HospitalLoginApp
         {
             InitializeComponent();
             // Optional: RegisterTaskInTaskScheduler(); or UnregisterTaskFromTaskScheduler();
+            this.Topmost = true;
+            this.WindowState = WindowState.Maximized;
+            this.WindowStyle = WindowStyle.None;
+            this.AllowsTransparency = true;
+            this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0));
         }
 
         private void BtnCredentialLogin_Click(object sender, RoutedEventArgs e)

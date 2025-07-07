@@ -1,9 +1,10 @@
-﻿using System;
+﻿using HospitalLoginApp.Helpers;
+using HospitalLoginApp.Services;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-using HospitalLoginApp.Helpers;
-using HospitalLoginApp.Services;
+using System.Windows.Media;
 using TPL = System.Threading.Tasks;
 
 namespace HospitalLoginApp.Windows
@@ -15,6 +16,11 @@ namespace HospitalLoginApp.Windows
         public FaceLoginWindow()
         {
             InitializeComponent();
+            this.Topmost = true;
+            this.WindowState = WindowState.Maximized;
+            this.WindowStyle = WindowStyle.None;
+            this.AllowsTransparency = true;
+            this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0));
             webcamHelper = new WebcamHelper(imgWebcam, Dispatcher);
             webcamHelper.StartPreview();
             lblStatus.Text = "📷 Webcam preview started.";
