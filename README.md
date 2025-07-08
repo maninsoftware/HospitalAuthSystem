@@ -39,7 +39,7 @@ HospitalAuthSystem/
 ## 🤝 Contributors
 
 - [siva-manin](https://github.com/siva-manin)
-- [uma-manin]
+- [uma-manin](https://github.com/Umapugal)
 
 ---
 
