@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using TPL = System.Threading.Tasks;
 
 namespace HospitalLoginApp.Windows
@@ -16,11 +15,6 @@ namespace HospitalLoginApp.Windows
         public FaceLoginWindow()
         {
             InitializeComponent();
-            this.Topmost = true;
-            this.WindowState = WindowState.Maximized;
-            this.WindowStyle = WindowStyle.None;
-            this.AllowsTransparency = true;
-            this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0));
             webcamHelper = new WebcamHelper(imgWebcam, Dispatcher);
             webcamHelper.StartPreview();
             lblStatus.Text = "📷 Webcam preview started.";
@@ -38,18 +32,30 @@ namespace HospitalLoginApp.Windows
             webcamHelper.ResetLiveness();
             webcamHelper.ActivateLivenessCheck();
 
-            await TPL.Task.Delay(5000); // Wait for user to blink
-            await TPL.Task.Delay(300);  // Slight buffer
+            int elapsed = 0;
+            int timeout = 5000;
+            int interval = 100;
 
-            bool isLive = webcamHelper.IsFaceLive();
-            if (!isLive)
+            while (elapsed < timeout)
             {
-                lblStatus.Text = "❌ Face not live or capture failed.";
+                if (webcamHelper.BlinkOccurred)
+                {
+                    lblStatus.Text = "✅ Blink detected!";
+                    break;
+                }
+
+                await TPL.Task.Delay(interval);
+                elapsed += interval;
+            }
+
+            if (!webcamHelper.BlinkOccurred)
+            {
+                lblStatus.Text = "❌ Blink not detected in time.";
                 return;
             }
 
             lblStatus.Text = "📸 Capturing image...";
-            byte[]? imageBytes = webcamHelper.CaptureImage();
+            byte[]? imageBytes = webcamHelper.CaptureImage(forceCapture: true);
 
             if (imageBytes == null)
             {
@@ -64,7 +70,7 @@ namespace HospitalLoginApp.Windows
             {
                 lblStatus.Text = $"✅ Welcome, {username}! Loading your Homescreen...";
                 webcamHelper.StopPreview();
-                await TPL.Task.Delay(2000);
+                await TPL.Task.Delay(1000);
                 ShellHelper.LaunchWindowsShellIfNeeded();
                 Application.Current.Shutdown();
             }

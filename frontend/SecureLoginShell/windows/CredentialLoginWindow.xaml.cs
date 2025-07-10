@@ -21,11 +21,11 @@ namespace HospitalLoginApp.Windows
         {
             InitializeComponent();
 
-            this.Topmost = true;
-            this.WindowState = WindowState.Maximized;
-            this.WindowStyle = WindowStyle.None;
-            this.AllowsTransparency = true;
-            this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0)); // 50% black
+            //this.Topmost = true;
+            //this.WindowState = WindowState.Maximized;
+            //this.WindowStyle = WindowStyle.None;
+            //this.AllowsTransparency = true;
+            //this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0)); // 50% black
         }
         private void txtUsername_GotFocus(object sender, RoutedEventArgs e)
         {

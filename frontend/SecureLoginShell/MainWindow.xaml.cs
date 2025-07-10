@@ -15,11 +15,11 @@ namespace HospitalLoginApp
         {
             InitializeComponent();
             // Optional: RegisterTaskInTaskScheduler(); or UnregisterTaskFromTaskScheduler();
-            this.Topmost = true;
-            this.WindowState = WindowState.Maximized;
-            this.WindowStyle = WindowStyle.None;
-            this.AllowsTransparency = true;
-            this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0));
+            //this.Topmost = true;
+            //this.WindowState = WindowState.Maximized;
+            //this.WindowStyle = WindowStyle.None;
+            //this.AllowsTransparency = true;
+            //this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0));
         }
 
         private void BtnCredentialLogin_Click(object sender, RoutedEventArgs e)
@@ -27,7 +27,7 @@ namespace HospitalLoginApp
             var window = new CredentialLoginWindow { Owner = this };
             this.Hide();
             window.ShowDialog();
-            this.Show();
+           
         }
 
         private void BtnFaceLogin_Click(object sender, RoutedEventArgs e)
