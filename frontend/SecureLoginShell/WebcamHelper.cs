@@ -86,7 +86,7 @@ namespace HospitalLoginApp.Services
                 {
                     using var dlibImage = LoadBitmapToDlibImage(cloned);
                     var faces = faceDetector.Operator(dlibImage);
-                    Debug.WriteLine($"[DEBUG] Number of faces detected = {faces.Length}");
+                    //Debug.WriteLine($"[DEBUG] Number of faces detected = {faces.Length}");
 
                     if (faces.Length > 0)
                     {
@@ -127,6 +127,7 @@ namespace HospitalLoginApp.Services
             blinkHelper.Reset();
         }
 
+        public bool BlinkOccurred => blinkHelper.BlinkOccurred();
         public bool IsFaceLive()
         {
             bool result = livenessConfirmed;
@@ -134,9 +135,12 @@ namespace HospitalLoginApp.Services
             return result;
         }
 
-        public byte[]? CaptureImage()
+        public byte[]? CaptureImage(bool forceCapture = false)
         {
-            if (!IsFaceLive() || capture == null)
+            if (!forceCapture && !IsFaceLive())
+                return null;
+
+            if (capture == null)
                 return null;
 
             using var frame = new Mat();

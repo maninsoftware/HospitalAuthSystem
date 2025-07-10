@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace HospitalLoginApp.Helpers
 {
+
+
     public class BlinkDetectionHelper
     {
         private readonly int[] leftEyeIdx = { 36, 37, 38, 39, 40, 41 };
@@ -19,7 +21,12 @@ namespace HospitalLoginApp.Helpers
         private bool wasEyeClosedLastFrame = false;
 
         private DateTime blinkStartTime;
-
+        public void Reset()
+        {
+            blinkOccurred = false;
+            isEyeClosed = false;
+            wasEyeClosedLastFrame = false;
+        }
         public void ProcessLandmarks(Point[] landmarks)
         {
             var leftEye = leftEyeIdx.Select(i => landmarks[i]).ToArray();
@@ -29,7 +36,7 @@ namespace HospitalLoginApp.Helpers
             double rightEAR = ComputeEAR(rightEye);
             double avgEAR = (leftEAR + rightEAR) / 2.0;
 
-            Debug.WriteLine($"[DEBUG] EAR: Left={leftEAR:F4}, Right={rightEAR:F4}, Avg={avgEAR:F4}");
+           // Debug.WriteLine($"[DEBUG] EAR: Left={leftEAR:F4}, Right={rightEAR:F4}, Avg={avgEAR:F4}");
 
             if (avgEAR < EAR_THRESHOLD && !wasEyeClosedLastFrame)
             {
@@ -60,7 +67,7 @@ namespace HospitalLoginApp.Helpers
             double B = Distance(eye[2], eye[4]);
             double C = Distance(eye[0], eye[3]);
             double ear = (A + B) / (2.0 * C);
-            Debug.WriteLine($"[DEBUG] EAR calculation: A={A:F4}, B={B:F4}, C={C:F4}, EAR={ear:F4}");
+            //Debug.WriteLine($"[DEBUG] EAR calculation: A={A:F4}, B={B:F4}, C={C:F4}, EAR={ear:F4}");
             return ear;
         }
 
@@ -71,11 +78,6 @@ namespace HospitalLoginApp.Helpers
 
         public bool BlinkOccurred() => blinkOccurred;
 
-        public void Reset()
-        {
-            blinkOccurred = false;
-            isEyeClosed = false;
-            wasEyeClosedLastFrame = false;
-        }
+       
     }
 }

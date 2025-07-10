@@ -16,6 +16,11 @@ namespace HospitalLoginApp.Windows
         public RegisterWindow()
         {
             InitializeComponent();
+            //this.Topmost = true;
+            //this.WindowState = WindowState.Maximized;
+            //this.WindowStyle = WindowStyle.None;
+            //this.AllowsTransparency = true;
+            //this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0)); // 50% black
 
             // Initialize webcam preview
             webcamHelper = new WebcamHelper(regWebcam, Dispatcher);
@@ -43,6 +48,20 @@ namespace HospitalLoginApp.Windows
                 return;
             }
 
+            lblStatus.Text = "👁️ Please blink to verify liveness...";
+
+            // Activate liveness check and wait for the window to end
+            webcamHelper.ActivateLivenessCheck();
+
+            // Wait for liveness window (5 seconds is default in WebcamHelper)
+            await Task.Delay(5500);
+
+            if (!webcamHelper.IsFaceLive())
+            {
+                lblStatus.Text = "❌ Liveness check failed. Please try again.";
+                return;
+            }
+
             lblStatus.Text = "📸 Capturing image...";
             byte[]? imageBytes = webcamHelper.CaptureImage();
 
@@ -67,6 +86,8 @@ namespace HospitalLoginApp.Windows
                 lblStatus.Text = "❌ Registration failed.";
             }
         }
+
+
 
         // Handle cleanup on close
         protected override void OnClosed(EventArgs e)
