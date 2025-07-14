@@ -4,43 +4,40 @@
         Title="Hospital PC Login"
         Height="700" Width="900"
         WindowStyle="None"
-        AllowsTransparency="True"
         Background="Transparent"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True">
 
-    <Grid>
-        <!-- Main Login Card -->
-        <Border Background="White"
-                CornerRadius="15"
-                Width="300"
-                Height="200"
-                Padding="10"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BorderBrush="#DDD"
-                BorderThickness="1">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="➡️"
-           FontSize="22"
-           FontWeight="Bold"
-           Foreground="#333"
-           HorizontalAlignment="Center"
-           Margin="0,0,0,10"/>
-                <TextBlock Text="Welcome !"
-                           FontSize="22"
-                           FontWeight="Bold"
-                           Foreground="#333"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,10"/>
+    <Grid Background="#66000000">
+        <!-- Semi-transparent dark background -->
 
-                <!-- Horizontal button group -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="🔐" FontSize="18" Width="55" Height="50" Click="BtnCredentialLogin_Click"  Margin="10"/>
-                    <Button Content="👤" FontSize="18" Width="55" Height="50" Click="BtnFaceLogin_Click" Margin=" 10"/>
-                    <Button Content="➕" FontSize="18" Width="55" Height="50" Click="BtnRegister_Click" Margin=" 10"/>
+        <!-- Main Login Card (Initially Hidden) -->
+        <Grid x:Name="MainCard" Visibility="Collapsed">
+            <Border Background="White"
+                    CornerRadius="15"
+                    Width="300"
+                    Height="220"
+                    Padding="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BorderBrush="#DDD"
+                    BorderThickness="1">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="➡️" FontSize="22" FontWeight="Bold" Foreground="#333" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="lblWelcome" Text="Welcome!" FontSize="22" FontWeight="Bold" Foreground="#333" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
+                    <!-- Horizontal button group -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="🔐" ToolTip="Credential Login" FontSize="18" Width="55" Height="50" Click="BtnCredentialLogin_Click" Margin="10"/>
+                        <Button Content="👤" ToolTip="Face Login" FontSize="18" Width="55" Height="50" Click="BtnFaceLogin_Click" Margin="10"/>
+                        <Button Content="➕" ToolTip="Register" FontSize="18" Width="55" Height="50" Click="BtnRegister_Click" Margin="10"/>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
-        </Border>
+            </Border>
+        </Grid>
+
+        <!-- Optional loading text -->
+        <TextBlock x:Name="lblLoading" Text="Authenticating with Azure AD..." Foreground="White" FontSize="18"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Grid>
 </Window>
